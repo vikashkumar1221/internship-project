@@ -1,0 +1,31 @@
+{
+  "name": "music-collaboration-studio",
+  "version": "1.0.0",
+  "description": "Production-Ready Real-Time Music Collaboration Studio & DAW SaaS",
+  "main": "server/src/index.js",
+  "scripts": {
+    "setup": "npm install --prefix server && npm install --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "build": "npm run build --prefix client",
+    "seed": "npm run seed --prefix server",
+    "start": "npm run start --prefix server"
+  },
+  "keywords": [
+    "music",
+    "daw",
+    "collaboration",
+    "websockets",
+    "wavesurfer",
+    "web-audio-api",
+    "stripe",
+    "demucs",
+    "saas"
+  ],
+  "author": "Vikash Jangir",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

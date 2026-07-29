@@ -1,0 +1,33 @@
+{
+  "name": "music-studio-server",
+  "version": "1.0.0",
+  "description": "Music Collaboration Studio Backend API Server",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "seed": "node src/seed/seedData.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.500.0",
+    "@aws-sdk/s3-request-presigner": "^3.500.0",
+    "axios": "^1.6.8",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "docusign-esign": "^6.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.24.2",
+    "multer": "^1.4.5-lts.1",
+    "pdfkit": "^0.15.0",
+    "socket.io": "^4.7.5",
+    "stripe": "^15.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
