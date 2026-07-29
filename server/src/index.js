@@ -83,7 +83,7 @@ app.use(errorHandler);
 // Start HTTP & Socket Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`=======================================================`);
+  // console.log(`=======================================================`);
   console.log(`🚀 Music Collaboration Studio API Server running on port ${PORT}`);
-  console.log(`=======================================================`);
+  // console.log(`=======================================================`);
 });
