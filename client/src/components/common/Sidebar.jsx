@@ -1,68 +1,98 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
-  FolderKanban,
-  Sliders,
+  Music,
+  Home,
+  Folder,
+  Compass,
   Users,
-  MessageSquare,
-  HardDrive
+  Mail,
+  Library,
+  BarChart2,
+  User,
+  Settings,
+  Plus
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
 
-export default function Sidebar() {
-  const { user } = useAuth();
+export default function Sidebar({ onOpenNewProject }) {
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const navItems = [
-    { name: 'Projects', path: '/dashboard', icon: FolderKanban },
-    { name: 'Studio DAW', path: '/studio', icon: Sliders },
+    { name: 'Dashboard', path: '/dashboard', icon: Home, exact: true },
+    { name: 'Projects', path: '/projects', icon: Folder, match: ['/dashboard', '/projects'] },
+    { name: 'Explore', path: '/explore', icon: Compass },
     { name: 'Collaborators', path: '/collaborators', icon: Users },
-    { name: 'Activity & Notes', path: '/activity', icon: MessageSquare },
+    { name: 'Messages', path: '/activity', icon: Mail },
+    { name: 'My Library', path: '/library', icon: Library, fallback: '/dashboard' },
+    { name: 'Analytics', path: '/analytics', icon: BarChart2, fallback: '/dashboard' },
+    { name: 'Profile', path: '/profile', icon: User },
+    { name: 'Settings', path: '/settings', icon: Settings }
   ];
 
+  const handleCreateProject = () => {
+    if (onOpenNewProject) {
+      onOpenNewProject();
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   return (
-    <aside className="w-56 border-r border-studio-border bg-studio-bg flex flex-col justify-between py-5 px-3 z-30 shrink-0">
-      <div className="space-y-6">
-        <div>
-          <p className="text-[11px] font-bold text-studio-muted uppercase tracking-wider px-3 mb-2">
-            Workspace
-          </p>
-          <nav className="space-y-1">
-            {navItems.map((item) => (
+    <aside className="w-64 lg:w-72 bg-[#121110] border-r border-[#24201c] flex flex-col justify-between py-6 px-4 z-30 shrink-0 select-none sticky top-0 h-screen overflow-y-auto">
+      <div>
+        {/* Logo matching the design */}
+        <div className="px-3 pb-6 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#f1dec9]">
+            <Music className="w-7 h-7 stroke-[2.2]" />
+          </div>
+          <span className="font-extrabold text-xl tracking-tight text-white">
+            StudioCollab
+          </span>
+        </div>
+
+        {/* Navigation Items */}
+        <nav className="space-y-1.5">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const targetPath = item.fallback || item.path;
+            const isActive = item.exact
+              ? location.pathname === '/dashboard'
+              : location.pathname.startsWith(item.path);
+
+            return (
               <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition ${
-                    isActive
-                      ? 'bg-studio-header text-white font-semibold shadow-xs'
-                      : 'text-studio-text hover:text-studio-header hover:bg-studio-section font-medium'
-                  }`
-                }
+                key={item.name}
+                to={targetPath}
+                className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm transition text-left group ${
+                  isActive
+                    ? 'bg-[#f1dec9] text-[#1a1614] font-bold shadow-xs'
+                    : 'text-[#c2b8ae] hover:text-white hover:bg-white/5 font-medium'
+                }`}
               >
-                <item.icon className="w-4 h-4 opacity-80" />
+                <Icon
+                  className={`w-5 h-5 ${
+                    isActive
+                      ? 'text-[#1a1614] stroke-[2.2]'
+                      : 'text-[#c2b8ae] group-hover:text-white stroke-[1.8]'
+                  }`}
+                />
                 <span>{item.name}</span>
               </NavLink>
-            ))}
-          </nav>
-        </div>
+            );
+          })}
+        </nav>
       </div>
 
-      {/* Cloud Storage Usage */}
-      <div className="px-2">
-        <div className="p-3 rounded-xl bg-studio-section border border-studio-border text-xs">
-          <div className="flex justify-between items-center text-studio-text mb-1.5 font-medium">
-            <span className="flex items-center gap-1.5 text-[11px]">
-              <HardDrive className="w-3.5 h-3.5 text-studio-muted" /> Cloud Stems
-            </span>
-            <span className="text-[11px] font-semibold text-studio-muted">2.4 / 10 GB</span>
-          </div>
-          <div className="w-full h-1.5 bg-studio-border rounded-full overflow-hidden">
-            <div className="w-1/4 h-full bg-studio-header rounded-full" />
-          </div>
-          <p className="text-[10px] text-studio-muted mt-2">
-            Audio stems & multi-track sync
-          </p>
-        </div>
+      {/* Bottom Button: + Create Project */}
+      <div className="pt-4">
+        <button
+          onClick={handleCreateProject}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-[#f1dec9] hover:bg-[#e4ceb7] text-[#1a1614] font-bold text-sm shadow-sm transition active:scale-[0.98]"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Create Project</span>
+        </button>
       </div>
     </aside>
   );

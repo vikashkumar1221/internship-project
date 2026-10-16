@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/common/Navbar';
+import Sidebar from '../components/common/Sidebar';
 import ProjectCard from '../components/dashboard/ProjectCard';
 import { Plus, FolderKanban, Search, X, Loader2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -137,8 +138,10 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between selection:bg-[#dcc5b2] selection:text-[#2c2420]">
       <Navbar onOpenNewProject={() => setShowCreateModal(true)} />
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar onOpenNewProject={() => setShowCreateModal(true)} />
 
-      <main className="flex-1 max-w-6xl mx-auto px-6 py-8 w-full space-y-6">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -214,6 +217,7 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+      </div>
 
       {/* New Project Modal */}
       {showCreateModal && (
