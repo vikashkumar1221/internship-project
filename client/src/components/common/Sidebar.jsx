@@ -23,9 +23,9 @@ export default function Sidebar({ onOpenNewProject }) {
     { name: 'Projects', path: '/projects', icon: Folder, match: ['/dashboard', '/projects'] },
     { name: 'Explore', path: '/explore', icon: Compass },
     { name: 'Collaborators', path: '/collaborators', icon: Users },
-    { name: 'Messages', path: '/activity', icon: Mail },
-    { name: 'My Library', path: '/library', icon: Library, fallback: '/dashboard' },
-    { name: 'Analytics', path: '/analytics', icon: BarChart2, fallback: '/dashboard' },
+    { name: 'Messages', path: '/messages', icon: Mail },
+    { name: 'My Library', path: '/library', icon: Library },
+    { name: 'Analytics', path: '/analytics', icon: BarChart2 },
     { name: 'Profile', path: '/profile', icon: User },
     { name: 'Settings', path: '/settings', icon: Settings }
   ];

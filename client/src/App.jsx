@@ -11,6 +11,9 @@ import SettingsPage from './pages/SettingsPage';
 import StudioPage from './pages/StudioPage';
 import CollaboratorsPage from './pages/CollaboratorsPage';
 import ActivityPage from './pages/ActivityPage';
+import LibraryPage from './pages/LibraryPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import MessagesPage from './pages/MessagesPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 export default function App() {
@@ -90,6 +93,33 @@ export default function App() {
         element={
           <ProtectedRoute>
             <CollaboratorsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute>
+            <MessagesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/library"
+        element={
+          <ProtectedRoute>
+            <LibraryPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedRoute>
+            <AnalyticsPage />
           </ProtectedRoute>
         }
       />
