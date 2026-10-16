@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
+import Sidebar from '../components/common/Sidebar';
 import { Play, Heart, Headphones, Filter, ChevronDown } from 'lucide-react';
 
 export default function ExplorePage() {
@@ -79,7 +80,10 @@ export default function ExplorePage() {
     <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between selection:bg-[#dcc5b2] selection:text-[#2c2420]">
       <Navbar />
 
-      <main className="flex-1 max-w-6xl mx-auto px-6 py-8 w-full space-y-6">
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar />
+
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
         {/* Title */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -172,10 +176,7 @@ export default function ExplorePage() {
           ))}
         </div>
       </main>
-
-      <footer className="border-t border-[#e6ded5] bg-[#f5f0ea] py-4 px-6 text-xs text-[#736a64] text-center">
-        © 2026 StudioCollab Community.
-      </footer>
+      </div>
     </div>
   );
 }

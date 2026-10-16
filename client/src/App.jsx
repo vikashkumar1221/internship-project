@@ -4,6 +4,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import ProjectsPage from './pages/ProjectsPage';
 import ExplorePage from './pages/ExplorePage';
 import ProjectDetailsPage from './pages/ProjectDetailsPage';
 import ProfilePage from './pages/ProfilePage';
@@ -33,7 +34,14 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/projects" element={<Navigate to="/dashboard" replace />} />
+      <Route
+        path="/projects"
+        element={
+          <ProtectedRoute>
+            <ProjectsPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Music Studio / DAW Interface */}
       <Route

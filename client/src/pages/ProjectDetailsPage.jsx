@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
+import Sidebar from '../components/common/Sidebar';
 import RoyaltySplitModal from '../components/studio/RoyaltySplitModal';
 import { Play, Heart, Headphones, Sliders, Music, ArrowLeft, FileText, Loader2 } from 'lucide-react';
 import api from '../services/api';
@@ -68,13 +69,16 @@ export default function ProjectDetailsPage() {
     <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between selection:bg-[#dcc5b2] selection:text-[#2c2420]">
       <Navbar />
 
-      <main className="flex-1 max-w-5xl mx-auto px-6 py-8 w-full space-y-8">
-        <Link
-          to="/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#736a64] hover:text-[#231f1d] transition"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Projects
-        </Link>
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar />
+
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
+          <Link
+            to="/projects"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#736a64] hover:text-[#231f1d] transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Projects
+          </Link>
 
         {loading ? (
           <div className="p-16 text-center text-xs text-[#736a64] flex items-center justify-center gap-2">
@@ -234,7 +238,8 @@ export default function ProjectDetailsPage() {
             </div>
           </>
         )}
-      </main>
+        </main>
+      </div>
 
       <RoyaltySplitModal
         isOpen={showRoyaltyModal}
@@ -242,10 +247,6 @@ export default function ProjectDetailsPage() {
         projectId={currentProject._id}
         projectTitle={currentProject.title}
       />
-
-      <footer className="border-t border-[#e6ded5] bg-[#f5f0ea] py-4 px-6 text-xs text-[#736a64] text-center">
-        © 2026 StudioCollab. All rights reserved.
-      </footer>
     </div>
   );
 }

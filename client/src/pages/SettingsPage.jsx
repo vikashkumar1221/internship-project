@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Navbar from '../components/common/Navbar';
+import Sidebar from '../components/common/Sidebar';
 import { useAuth } from '../context/AuthContext';
 import { User, Bell, Shield, Link2, Sliders, Check } from 'lucide-react';
 
@@ -32,11 +33,14 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between selection:bg-[#dcc5b2] selection:text-[#2c2420]">
       <Navbar />
 
-      <main className="flex-1 max-w-5xl mx-auto px-6 py-8 w-full">
-        <div className="mb-6">
-          <h1 className="text-2xl font-extrabold text-[#231f1d] tracking-tight">Settings</h1>
-          <p className="text-xs text-[#736a64] mt-0.5">Manage your studio account preferences and profile.</p>
-        </div>
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar />
+
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
+          <div>
+            <h1 className="text-2xl font-extrabold text-[#231f1d] tracking-tight">Settings</h1>
+            <p className="text-xs text-[#736a64] mt-0.5">Manage your studio account preferences and profile.</p>
+          </div>
 
         <div className="bg-white border border-[#e6ded5] rounded-2xl shadow-subtle overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[460px]">
           {/* Left Sidebar Navigation */}
@@ -135,10 +139,7 @@ export default function SettingsPage() {
           </div>
         </div>
       </main>
-
-      <footer className="border-t border-[#e6ded5] bg-[#f5f0ea] py-4 px-6 text-xs text-[#736a64] text-center">
-        © 2026 StudioCollab Settings.
-      </footer>
+      </div>
     </div>
   );
 }

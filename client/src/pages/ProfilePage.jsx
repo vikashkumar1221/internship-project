@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
+import Sidebar from '../components/common/Sidebar';
 import { useAuth } from '../context/AuthContext';
 import { Play, Settings, Headphones, Heart, FolderKanban } from 'lucide-react';
 
@@ -42,7 +43,10 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between selection:bg-[#dcc5b2] selection:text-[#2c2420]">
       <Navbar />
 
-      <main className="flex-1 max-w-4xl mx-auto px-6 py-8 w-full space-y-6">
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar />
+
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
         {/* Profile Card */}
         <div className="bg-white border border-[#e6ded5] rounded-2xl p-6 sm:p-8 shadow-subtle flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
@@ -147,10 +151,7 @@ export default function ProfilePage() {
           ))}
         </div>
       </main>
-
-      <footer className="border-t border-[#e6ded5] bg-[#f5f0ea] py-4 px-6 text-xs text-[#736a64] text-center">
-        © 2026 StudioCollab Profile.
-      </footer>
+      </div>
     </div>
   );
 }

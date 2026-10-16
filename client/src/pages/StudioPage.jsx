@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DAWHeader from '../components/studio/DAWHeader';
+import Sidebar from '../components/common/Sidebar';
 import Timeline from '../components/studio/Timeline';
 import MixingConsole from '../components/studio/MixingConsole';
 import PianoRoll from '../components/studio/PianoRoll';
@@ -157,15 +158,19 @@ export default function StudioPage() {
         onOpenRoyalty={() => setShowRoyaltyModal(true)}
       />
 
-      {/* Center DAW Multi-Track Timeline (Dark Workspace) */}
+      {/* Center DAW Multi-Track Timeline with docked Sidebar */}
       <div className="flex-1 flex overflow-hidden relative">
-        <Timeline onSelectTrack={() => {}} projectId={activeProject?._id || id} />
+        <Sidebar />
 
-        {/* Sliding Chat Drawer */}
-        <ProjectChat isOpen={showChat} onClose={() => setShowChat(false)} projectId={activeProject?._id || id} />
+        <div className="flex-1 flex flex-col overflow-hidden relative min-w-0">
+          <Timeline onSelectTrack={() => {}} projectId={activeProject?._id || id} />
 
-        {/* Version History Drawer */}
-        <VersionControlPanel isOpen={showVersions} onClose={() => setShowVersions(false)} projectId={activeProject?._id || id} />
+          {/* Sliding Chat Drawer */}
+          <ProjectChat isOpen={showChat} onClose={() => setShowChat(false)} projectId={activeProject?._id || id} />
+
+          {/* Version History Drawer */}
+          <VersionControlPanel isOpen={showVersions} onClose={() => setShowVersions(false)} projectId={activeProject?._id || id} />
+        </div>
       </div>
 
       {/* Royalty Split Calculator Modal */}

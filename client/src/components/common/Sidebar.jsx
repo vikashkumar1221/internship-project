@@ -20,10 +20,10 @@ export default function Sidebar({ onOpenNewProject }) {
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: Home, exact: true },
-    { name: 'Projects', path: '/projects', icon: Folder, match: ['/dashboard', '/projects'] },
+    { name: 'Projects', path: '/projects', icon: Folder, match: ['/projects', '/project', '/studio'] },
     { name: 'Explore', path: '/explore', icon: Compass },
     { name: 'Collaborators', path: '/collaborators', icon: Users },
-    { name: 'Messages', path: '/messages', icon: Mail },
+    { name: 'Messages', path: '/messages', icon: Mail, match: ['/messages', '/activity', '/notifications'] },
     { name: 'My Library', path: '/library', icon: Library },
     { name: 'Analytics', path: '/analytics', icon: BarChart2 },
     { name: 'Profile', path: '/profile', icon: User },
@@ -39,7 +39,7 @@ export default function Sidebar({ onOpenNewProject }) {
   };
 
   return (
-    <aside className="w-64 lg:w-72 bg-[#121110] border-r border-[#24201c] flex flex-col justify-between py-6 px-4 z-30 shrink-0 select-none sticky top-0 h-screen overflow-y-auto">
+    <aside className="w-64 lg:w-72 bg-[#121110] border-r border-[#24201c] flex flex-col justify-between py-6 px-4 z-30 shrink-0 select-none min-h-[calc(100vh-64px)] h-full overflow-y-auto">
       <div>
         {/* Logo matching the design */}
         <div className="px-3 pb-6 flex items-center gap-3">
@@ -57,8 +57,10 @@ export default function Sidebar({ onOpenNewProject }) {
             const Icon = item.icon;
             const targetPath = item.fallback || item.path;
             const isActive = item.exact
-              ? location.pathname === '/dashboard'
-              : location.pathname.startsWith(item.path);
+              ? location.pathname === item.path
+              : item.match
+                ? item.match.some((m) => location.pathname.startsWith(m))
+                : location.pathname.startsWith(item.path);
 
             return (
               <NavLink
