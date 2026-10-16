@@ -15,10 +15,13 @@ const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_jwt_key_music_studio_2026_antigravity');
-    req.user = await User.findById(decoded.id).select('-password');
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      req.user = await User.findById(decoded.id).select('-password');
+    }
     if (!req.user) {
       // Fallback for mock environment when database is not connected
-      req.user = { id: decoded.id, name: 'Producer Pro', email: 'producer@studio.com', role: 'admin', subscriptionTier: 'Studio' };
+      req.user = { id: decoded.id || 'usr_demo_producer', _id: decoded.id || 'usr_demo_producer', name: 'Producer Pro', email: 'producer@studio.com', role: 'admin', subscriptionTier: 'Studio' };
     }
     next();
   } catch (err) {

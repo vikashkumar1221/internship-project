@@ -16,9 +16,17 @@ exports.uploadStem = async (req, res) => {
     const filePath = req.file.path;
     const fileMime = req.file.mimetype;
 
-    // Upload to S3 Bucket
+    // Upload to S3 if configured, otherwise serve local uploads
     const s3Key = `stems/${Date.now()}-${req.file.originalname}`;
-    const fileUrl = await uploadFileToS3(filePath, s3Key, fileMime);
+    let fileUrl = `/uploads/${req.file.filename}`;
+    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID !== 'mock_aws_access_key') {
+      try {
+        fileUrl = await uploadFileToS3(filePath, s3Key, fileMime);
+      } catch (err) {
+        console.warn('S3 upload error, defaulting to local static url:', err.message);
+        fileUrl = `/uploads/${req.file.filename}`;
+      }
+    }
 
     // Extract Waveform Peak Array & Audio Duration
     const { duration, peaks } = await extractWaveformPeaks(filePath);

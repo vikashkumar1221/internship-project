@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { audioEngine } from '../../services/webAudioEngine';
-import { X, Play, Music, Sparkles } from 'lucide-react';
+import { X, Play, Music } from 'lucide-react';
 
 export default function PianoRoll({ onClose }) {
   const notes = [
@@ -18,10 +18,8 @@ export default function PianoRoll({ onClose }) {
     { pitch: 'C4', freq: 261.63 }
   ];
 
-  // Grid steps (16 steps = 1 Bar of 1/16ths)
   const steps = Array.from({ length: 16 }, (_, i) => i);
 
-  // Active matrix state [noteIndex][stepIndex]
   const [grid, setGrid] = useState(() =>
     Array.from({ length: 12 }, (_, noteIdx) =>
       Array.from({ length: 16 }, (_, stepIdx) => (noteIdx === 3 && stepIdx % 4 === 0) || (noteIdx === 8 && stepIdx % 2 === 0))
@@ -51,57 +49,64 @@ export default function PianoRoll({ onClose }) {
   };
 
   return (
-    <div className="h-80 border-t border-studio-border bg-studio-dark flex flex-col z-30 shadow-2xl animate-in slide-in-from-bottom-4">
+    <div className="h-72 border-t border-slate-200 bg-white flex flex-col z-30 shadow-elevated animate-in slide-in-from-bottom-2">
       {/* Top Controls Bar */}
-      <div className="h-10 px-4 border-b border-studio-border flex justify-between items-center bg-studio-card/80">
+      <div className="h-9 px-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
         <div className="flex items-center gap-3">
-          <Music className="w-4 h-4 text-pink-400" />
-          <h3 className="font-bold text-xs uppercase tracking-wider text-gray-200">
-            MIDI Piano Roll Sequencer (Synth Sampler)
+          <Music className="w-3.5 h-3.5 text-blue-600" />
+          <h3 className="font-semibold text-xs text-slate-800">
+            MIDI Step Sequencer
           </h3>
           <button
             onClick={playSequence}
-            className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-500 transition"
+            className="flex items-center gap-1 px-2.5 py-0.5 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium text-[11px] shadow-xs transition"
           >
-            <Play className="w-3 h-3 fill-current" /> Play Pattern
+            <Play className="w-3 h-3 fill-current" /> Play Loop
           </button>
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-white">
+        <button
+          onClick={onClose}
+          className="text-slate-400 hover:text-slate-700 p-1 rounded hover:bg-slate-200 transition"
+        >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Piano Roll Workspace */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Keys Column */}
-        <div className="w-20 bg-studio-card border-r border-studio-border flex flex-col justify-between shrink-0 select-none">
-          {notes.map((n, idx) => (
+      {/* Piano Roll Matrix */}
+      <div className="flex-1 flex overflow-auto bg-slate-50">
+        {/* Keys Column */}
+        <div className="w-14 border-r border-slate-200 bg-white shrink-0 sticky left-0 z-20 flex flex-col">
+          {notes.map((note) => (
             <div
-              key={n.pitch}
-              onClick={() => audioEngine.playNote(n.freq, 0.4)}
-              className={`flex-1 border-b border-studio-border/40 px-2 flex items-center justify-between text-[10px] font-bold cursor-pointer transition ${
-                n.pitch.includes('#') ? 'bg-black/80 text-gray-400' : 'bg-studio-panel text-gray-200 hover:bg-indigo-600/30'
+              key={note.pitch}
+              onClick={() => audioEngine.playNote(note.freq, 0.3)}
+              className={`flex-1 border-b border-slate-200 flex items-center justify-end pr-2 text-[10px] font-mono cursor-pointer transition select-none ${
+                note.pitch.includes('#')
+                  ? 'bg-slate-800 text-slate-100 hover:bg-slate-900'
+                  : 'bg-white text-slate-700 hover:bg-blue-50'
               }`}
             >
-              <span>{n.pitch}</span>
+              {note.pitch}
             </div>
           ))}
         </div>
 
-        {/* Note Grid Matrix */}
-        <div className="flex-1 overflow-x-auto flex flex-col justify-between daw-grid-bg">
-          {notes.map((n, noteIdx) => (
-            <div key={n.pitch} className="flex-1 flex border-b border-studio-border/20">
+        {/* Step Cells Grid */}
+        <div className="flex-1 flex flex-col min-w-[500px]">
+          {notes.map((note, noteIdx) => (
+            <div key={note.pitch} className="flex-1 flex border-b border-slate-200">
               {steps.map((stepIdx) => {
                 const isActive = grid[noteIdx][stepIdx];
                 return (
                   <div
                     key={stepIdx}
                     onClick={() => toggleNote(noteIdx, stepIdx)}
-                    className={`flex-1 border-r border-studio-border/30 cursor-pointer transition ${
+                    className={`flex-1 border-r border-slate-200/80 cursor-pointer transition-colors ${
                       isActive
-                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 shadow-md shadow-pink-500/40 rounded-sm'
-                        : 'hover:bg-indigo-500/20'
+                        ? 'bg-blue-600 hover:bg-blue-700'
+                        : stepIdx % 4 === 0
+                        ? 'bg-slate-100 hover:bg-blue-100/60'
+                        : 'bg-white hover:bg-blue-50'
                     }`}
                   />
                 );

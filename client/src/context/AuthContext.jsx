@@ -6,16 +6,9 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : {
-      id: 'usr_demo_producer',
-      name: 'Alex Rivera',
-      email: 'alex@studio.com',
-      role: 'admin',
-      subscriptionTier: 'Studio',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'
-    };
+    return saved ? JSON.parse(saved) : null;
   });
-  const [token, setToken] = useState(() => localStorage.getItem('token') || 'mock_jwt_token_2026');
+  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -41,21 +34,11 @@ export const AuthProvider = ({ children }) => {
       setUser(res.data.user);
       setToken(res.data.token);
       setLoading(false);
-      return { success: true };
+      return { success: true, user: res.data.user };
     } catch (err) {
       setLoading(false);
-      // Demo fallback if backend is offline
-      const mockUser = {
-        id: 'usr_demo_producer',
-        name: email.split('@')[0] || 'Producer Pro',
-        email,
-        role: 'user',
-        subscriptionTier: 'Pro',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'
-      };
-      setUser(mockUser);
-      setToken('mock_token_success');
-      return { success: true };
+      const message = err.response?.data?.message || 'Invalid credentials or server connection failed.';
+      return { success: false, error: message };
     }
   };
 
@@ -66,14 +49,20 @@ export const AuthProvider = ({ children }) => {
       setUser(res.data.user);
       setToken(res.data.token);
       setLoading(false);
-      return { success: true };
+      return { success: true, user: res.data.user };
     } catch (err) {
       setLoading(false);
-      const mockUser = { id: `usr_${Date.now()}`, name, email, role: 'user', subscriptionTier: 'Free', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300' };
-      setUser(mockUser);
-      setToken('mock_token_register');
-      return { success: true };
+      const message = err.response?.data?.message || 'Registration failed. Email may already be in use.';
+      return { success: false, error: message };
     }
+  };
+
+  const updateProfile = (updatedFields) => {
+    setUser((prev) => {
+      const updated = { ...prev, ...updatedFields };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const logout = () => {
@@ -84,7 +73,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, updateProfile, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

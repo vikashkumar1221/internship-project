@@ -7,16 +7,27 @@ const Project = require('../models/Project');
 const Track = require('../models/Track');
 const MarketplaceItem = require('../models/MarketplaceItem');
 
-const seedDatabase = async () => {
+const seedDatabase = async (standalone = false) => {
   try {
-    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/music_collab_studio');
-    console.log('[Seed] Connected to MongoDB...');
+    if (standalone) {
+      await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/music_collab_studio');
+      console.log('[Seed] Connected to MongoDB...');
+    }
 
-    // Clear existing
-    await User.deleteMany();
-    await Project.deleteMany();
-    await Track.deleteMany();
-    await MarketplaceItem.deleteMany();
+    // Check if data already exists
+    const userCount = await User.countDocuments();
+    if (userCount > 0 && !standalone) {
+      console.log(`[Seed] Database already contains ${userCount} users. Skipping auto-seed.`);
+      return;
+    }
+
+    // Clear existing if standalone
+    if (standalone) {
+      await User.deleteMany();
+      await Project.deleteMany();
+      await Track.deleteMany();
+      await MarketplaceItem.deleteMany();
+    }
 
     // Create Admin & Demo Users
     const adminUser = await User.create({
@@ -76,11 +87,16 @@ const seedDatabase = async () => {
     });
 
     console.log('[Seed] Database successfully seeded!');
-    process.exit(0);
+    if (standalone) process.exit(0);
   } catch (error) {
     console.error('[Seed Error]', error);
-    process.exit(1);
+    if (standalone) process.exit(1);
   }
 };
 
-seedDatabase();
+if (require.main === module) {
+  seedDatabase(true);
+}
+
+module.exports = seedDatabase;
+

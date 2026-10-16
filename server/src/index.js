@@ -25,6 +25,7 @@ const marketplaceRoutes = require('./routes/marketplaceRoutes');
 const stripeRoutes = require('./routes/stripeRoutes');
 const distributionRoutes = require('./routes/distributionRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 // Initialize App & Server
 const app = express();
@@ -71,6 +72,7 @@ app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api/stripe', stripeRoutes);
 app.use('/api/distribution', distributionRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health Check Endpoint
 app.get('/health', (req, res) => {

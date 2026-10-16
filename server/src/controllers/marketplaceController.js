@@ -1,10 +1,42 @@
 const MarketplaceItem = require('../models/MarketplaceItem');
 const Order = require('../models/Order');
+const mongoose = require('mongoose');
 
 // @desc Get All Beats / Stems on Marketplace
 // @route GET /api/marketplace
 exports.getMarketplaceItems = async (req, res) => {
   try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(200).json({
+        success: true,
+        data: [
+          {
+            _id: 'beat_1',
+            title: 'Midnight Synthwave Beat',
+            genre: 'Synthwave',
+            bpm: 124,
+            key: 'F Minor',
+            leasePrice: 29,
+            premiumPrice: 79,
+            exclusivePrice: 299,
+            coverImage: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600',
+            seller: { name: 'Alex Rivera', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300' }
+          },
+          {
+            _id: 'beat_2',
+            title: 'Cyber Dark Traps',
+            genre: 'Trap',
+            bpm: 140,
+            key: 'C Minor',
+            leasePrice: 35,
+            premiumPrice: 89,
+            exclusivePrice: 349,
+            coverImage: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600',
+            seller: { name: 'Sarah Chen', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300' }
+          }
+        ]
+      });
+    }
     const { genre, search } = req.query;
     let query = {};
     if (genre && genre !== 'All') {

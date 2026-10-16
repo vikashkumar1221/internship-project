@@ -3,18 +3,19 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   activeProject: {
     _id: 'proj_demo_123',
-    title: 'Midnight Synthwave Anthem',
+    title: 'New Song',
+    folder: 'My Project',
     tempo: 124,
     keySignature: 'F Minor',
     timeSignature: '4/4',
-    genre: 'Synthwave',
-    description: '80s inspired retro synthwave collaboration project with lush vocal hooks.'
+    genre: 'Indie Pop',
+    description: 'Collaborative studio session with Vocals, Guitar, Drums, and Bass.'
   },
   tracks: [
     {
       _id: 'track_1',
-      name: 'Lead Vocals (Sarah)',
-      color: '#ec4899',
+      name: 'Vocals',
+      color: '#06b6d4',
       volume: -2,
       pan: 0,
       isMuted: false,
@@ -23,7 +24,7 @@ const initialState = {
       stems: [
         {
           _id: 'stem_1',
-          name: 'Sarah_Vocal_Lead_Hook.wav',
+          name: 'Lead_Vocal_Take1.wav',
           duration: 180,
           startTime: 0,
           peaks: Array.from({ length: 80 }, (_, i) => Math.abs(Math.sin(i * 0.2) * 0.8 + 0.1))
@@ -32,8 +33,8 @@ const initialState = {
     },
     {
       _id: 'track_2',
-      name: 'Analog Jupiter Synth',
-      color: '#6366f1',
+      name: 'Guitar',
+      color: '#3b82f6',
       volume: -4,
       pan: -0.2,
       isMuted: false,
@@ -42,7 +43,7 @@ const initialState = {
       stems: [
         {
           _id: 'stem_2',
-          name: 'Jupiter_8_Chords.wav',
+          name: 'Acoustic_Guitar_Chords.wav',
           duration: 180,
           startTime: 0,
           peaks: Array.from({ length: 80 }, (_, i) => Math.abs(Math.cos(i * 0.15) * 0.7 + 0.2))
@@ -51,26 +52,7 @@ const initialState = {
     },
     {
       _id: 'track_3',
-      name: 'Sub Bassline',
-      color: '#10b981',
-      volume: -1,
-      pan: 0,
-      isMuted: false,
-      isSoloed: false,
-      eqSettings: { low: 5, mid: -2, high: -6 },
-      stems: [
-        {
-          _id: 'stem_3',
-          name: 'Moog_Sub_Bass.wav',
-          duration: 180,
-          startTime: 0,
-          peaks: Array.from({ length: 80 }, (_, i) => Math.abs(Math.sin(i * 0.1) * 0.9 + 0.1))
-        }
-      ]
-    },
-    {
-      _id: 'track_4',
-      name: '707 Drum Loop',
+      name: 'Drums',
       color: '#f59e0b',
       volume: 0,
       pan: 0,
@@ -79,11 +61,30 @@ const initialState = {
       eqSettings: { low: 2, mid: 0, high: 3 },
       stems: [
         {
-          _id: 'stem_4',
-          name: 'TR707_Full_Beat.wav',
+          _id: 'stem_3',
+          name: 'Drum_Groove_Pattern.wav',
           duration: 180,
           startTime: 0,
           peaks: Array.from({ length: 80 }, (_, i) => (i % 4 === 0 ? 0.95 : 0.25))
+        }
+      ]
+    },
+    {
+      _id: 'track_4',
+      name: 'Bass',
+      color: '#8b5cf6',
+      volume: -1,
+      pan: 0,
+      isMuted: false,
+      isSoloed: false,
+      eqSettings: { low: 5, mid: -2, high: -6 },
+      stems: [
+        {
+          _id: 'stem_4',
+          name: 'Moog_Sub_Bass.wav',
+          duration: 180,
+          startTime: 0,
+          peaks: Array.from({ length: 80 }, (_, i) => Math.abs(Math.sin(i * 0.1) * 0.9 + 0.1))
         }
       ]
     }
@@ -152,6 +153,9 @@ export const studioSlice = createSlice({
     addTrack: (state, action) => {
       state.tracks.push(action.payload);
     },
+    deleteTrack: (state, action) => {
+      state.tracks = state.tracks.filter((t) => t._id !== action.payload);
+    },
     addStemToTrack: (state, action) => {
       const { trackId, stem } = action.payload;
       const track = state.tracks.find((t) => t._id === trackId);
@@ -177,6 +181,7 @@ export const {
   setSnapToGrid,
   setSelectedTool,
   addTrack,
+  deleteTrack,
   addStemToTrack,
   setOnlineCollaborators
 } = studioSlice.actions;

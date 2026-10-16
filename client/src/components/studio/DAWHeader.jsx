@@ -20,17 +20,39 @@ import {
   Scissors,
   MousePointer,
   Share2,
-  Cpu,
   History,
   MessageSquare,
   Sliders,
-  Music2
+  Music,
+  Download,
+  ArrowLeft,
+  FileText
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-export default function DAWHeader({ onOpenAIStems, onToggleChat, onToggleVersions, onToggleMixer, onTogglePianoRoll }) {
+export default function DAWHeader({
+  onToggleChat,
+  onToggleVersions,
+  onToggleMixer,
+  onTogglePianoRoll,
+  onOpenExport,
+  onOpenInvite,
+  onOpenRoyalty
+}) {
   const dispatch = useDispatch();
-  const { isPlaying, currentTime, zoomLevel, snapToGrid, selectedTool, activeProject, onlineCollaborators } = useSelector((state) => state.studio);
-  const [bpm, setBpm] = useState(activeProject?.tempo || 120);
+  const {
+    isPlaying,
+    currentTime,
+    zoomLevel,
+    snapToGrid,
+    selectedTool,
+    activeProject,
+    onlineCollaborators
+  } = useSelector((state) => state.studio);
+
+  const [bpm, setBpm] = useState(activeProject?.tempo || 124);
+  const [isLooping, setIsLooping] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
   const togglePlayback = () => {
     audioEngine.init();
@@ -42,168 +64,263 @@ export default function DAWHeader({ onOpenAIStems, onToggleChat, onToggleVersion
     dispatch(setCurrentTime(0));
   };
 
+  // Convert seconds to mm:ss.ms
+  const formatTime = (sec) => {
+    const mins = Math.floor(sec / 60);
+    const secs = (sec % 60).toFixed(1);
+    return `${mins.toString().padStart(2, '0')}:${secs.padStart(4, '0')}`;
+  };
+
+  // Calculate current bar
+  const currentBar = Math.floor((currentTime * (bpm / 60)) / 4) + 1;
+  const currentBeat = (Math.floor(currentTime * (bpm / 60)) % 4) + 1;
+
   return (
-    <header className="h-14 border-b border-studio-border bg-studio-dark flex items-center justify-between px-4 select-none z-20">
-      {/* Left: Project Title & Transport Controls */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Music2 className="w-5 h-5 text-indigo-400" />
-          <h2 className="font-bold text-sm text-gray-100 max-w-[180px] truncate">
-            {activeProject?.title || 'Untitled Studio Project'}
-          </h2>
+    <header className="h-14 bg-studio-header border-b border-black/20 flex items-center justify-between px-4 select-none z-30 shadow-sm text-white">
+      {/* Left: Back to Projects & Project Title */}
+      <div className="flex items-center gap-3">
+        <Link
+          to="/dashboard"
+          className="p-1.5 rounded-lg text-[#e6ded5] hover:text-white hover:bg-white/10 transition"
+          title="Back to Projects"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Link>
+
+        <div className="flex items-center gap-2 pr-3 border-r border-white/15">
+          <div className="w-7 h-7 rounded-lg bg-studio-tan text-studio-header flex items-center justify-center shadow-xs">
+            <Music className="w-4 h-4 fill-current" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 text-xs text-[#e6ded5] font-medium">
+              <span className="text-[#a89f97]">{activeProject?.folder || 'My Project'}</span>
+              <span className="text-[#a89f97]">&gt;</span>
+              <span className="text-white font-bold">{activeProject?.title || 'New Song'}</span>
+            </div>
+            <span className="text-[10px] text-[#cfb59f] block">
+              {activeProject?.genre || 'Indie Pop'}
+            </span>
+          </div>
         </div>
 
         {/* Transport Playback Buttons */}
-        <div className="flex items-center gap-1 bg-studio-panel/80 p-1 rounded-lg border border-studio-border">
+        <div className="flex items-center gap-1 bg-black/25 p-1 rounded-lg border border-white/10">
           <button
             onClick={togglePlayback}
             className={`p-1.5 rounded-md transition ${
               isPlaying
-                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                : 'text-gray-300 hover:text-white hover:bg-studio-card'
+                ? 'bg-studio-tan text-studio-header shadow-xs font-bold'
+                : 'text-[#e6ded5] hover:text-white hover:bg-white/10'
             }`}
+            title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
           >
-            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+            {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
           </button>
+          
           <button
             onClick={stopPlayback}
-            className="p-1.5 rounded-md text-gray-300 hover:text-white hover:bg-studio-card transition"
+            className="p-1.5 rounded-md text-[#e6ded5] hover:text-white hover:bg-white/10 transition"
+            title="Stop & Rewind"
           >
             <Square className="w-4 h-4 fill-current" />
           </button>
-          <button className="p-1.5 rounded-md text-red-400 hover:bg-studio-card transition">
+
+          <button
+            onClick={() => setIsRecording(!isRecording)}
+            className={`p-1.5 rounded-md transition ${
+              isRecording
+                ? 'bg-red-600 text-white shadow-xs animate-pulse'
+                : 'text-red-400 hover:text-red-300 hover:bg-white/10'
+            }`}
+            title="Record Audio"
+          >
             <Circle className="w-4 h-4 fill-current" />
           </button>
-          <button className="p-1.5 rounded-md text-indigo-400 hover:bg-studio-card transition">
+
+          <button
+            onClick={() => setIsLooping(!isLooping)}
+            className={`p-1.5 rounded-md transition ${
+              isLooping
+                ? 'bg-studio-tan text-studio-header'
+                : 'text-[#e6ded5] hover:text-white hover:bg-white/10'
+            }`}
+            title="Toggle Loop"
+          >
             <Repeat className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Time Counter display */}
-        <div className="bg-black/60 px-3 py-1 rounded-md border border-studio-border font-mono text-xs font-semibold text-emerald-400">
-          00:00:{(currentTime % 60).toFixed(1).padStart(4, '0')}
+        {/* Time Counters: Clock & Bar display */}
+        <div className="flex items-center gap-2 bg-black/25 px-2.5 py-1 rounded-lg border border-white/10 font-mono text-xs">
+          <span className="font-semibold text-white">{formatTime(currentTime)}</span>
+          <span className="text-white/30">|</span>
+          <span className="text-[#cfb59f] font-medium">Bar {currentBar}.{currentBeat}</span>
         </div>
       </div>
 
-      {/* Middle: Studio Settings (BPM, Key, Grid, Tools) */}
-      <div className="flex items-center gap-3">
+      {/* Middle: Studio Controls (BPM, Key, Grid, Tools) */}
+      <div className="hidden lg:flex items-center gap-3">
         {/* BPM & Key */}
-        <div className="flex items-center gap-2 bg-studio-panel/80 px-2.5 py-1 rounded-lg border border-studio-border text-xs">
-          <span className="text-gray-400">BPM</span>
+        <div className="flex items-center gap-2 bg-black/25 px-2.5 py-1 rounded-lg border border-white/10 text-xs">
+          <span className="text-white/60 font-medium">BPM</span>
           <input
             type="number"
+            min="40"
+            max="240"
             value={bpm}
             onChange={(e) => setBpm(e.target.value)}
-            className="w-12 bg-transparent text-indigo-300 font-bold text-center focus:outline-none"
+            className="w-12 bg-white/10 border border-white/15 rounded px-1 py-0.5 text-white font-bold text-center focus:outline-none focus:border-studio-tan"
           />
-          <span className="text-gray-500">|</span>
-          <span className="text-gray-400">Key</span>
-          <span className="text-pink-400 font-bold">{activeProject?.keySignature || 'F Minor'}</span>
+          <span className="text-white/30">|</span>
+          <span className="text-white/60 font-medium">Key</span>
+          <span className="font-semibold text-white">{activeProject?.keySignature || 'F Minor'}</span>
         </div>
 
         {/* Snap to Grid */}
-        <div className="flex items-center gap-1.5 bg-studio-panel/80 px-2.5 py-1 rounded-lg border border-studio-border text-xs text-gray-300">
-          <Grid className="w-3.5 h-3.5 text-indigo-400" />
+        <div className="flex items-center gap-1.5 bg-black/25 px-2.5 py-1 rounded-lg border border-white/10 text-xs text-[#e6ded5]">
+          <Grid className="w-3.5 h-3.5 text-white/60" />
           <select
             value={snapToGrid}
             onChange={(e) => dispatch(setSnapToGrid(e.target.value))}
-            className="bg-transparent text-gray-200 focus:outline-none cursor-pointer"
+            className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
           >
-            <option value="1/4" className="bg-studio-card">1/4 Note</option>
-            <option value="1/8" className="bg-studio-card">1/8 Note</option>
-            <option value="1/16" className="bg-studio-card">1/16 Note</option>
-            <option value="Off" className="bg-studio-card">Grid Off</option>
+            <option value="1/4" className="bg-studio-header">1/4 Note</option>
+            <option value="1/8" className="bg-studio-header">1/8 Note</option>
+            <option value="1/16" className="bg-studio-header">1/16 Note</option>
+            <option value="Off" className="bg-studio-header">Grid Off</option>
           </select>
         </div>
 
         {/* Editor Tools */}
-        <div className="flex items-center gap-1 bg-studio-panel/80 p-1 rounded-lg border border-studio-border">
+        <div className="flex items-center gap-1 bg-black/25 p-1 rounded-lg border border-white/10">
           <button
             onClick={() => dispatch(setSelectedTool('pointer'))}
-            className={`p-1.5 rounded ${
-              selectedTool === 'pointer' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+            className={`p-1.5 rounded transition ${
+              selectedTool === 'pointer'
+                ? 'bg-studio-tan text-studio-header font-bold shadow-xs'
+                : 'text-[#e6ded5] hover:text-white'
             }`}
-            title="Pointer Selection Tool"
+            title="Pointer Selection Tool (V)"
           >
             <MousePointer className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => dispatch(setSelectedTool('cut'))}
-            className={`p-1.5 rounded ${
-              selectedTool === 'cut' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+            className={`p-1.5 rounded transition ${
+              selectedTool === 'cut'
+                ? 'bg-studio-tan text-studio-header font-bold shadow-xs'
+                : 'text-[#e6ded5] hover:text-white'
             }`}
-            title="Split Clip Tool (Blade)"
+            title="Split Clip Tool (C)"
           >
             <Scissors className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Zoom Controls */}
-        <div className="flex items-center gap-1 bg-studio-panel/80 px-2 py-1 rounded-lg border border-studio-border text-xs">
+        <div className="flex items-center gap-1 bg-black/25 px-2 py-1 rounded-lg border border-white/10 text-xs">
           <button
             onClick={() => dispatch(setZoomLevel(Math.max(50, zoomLevel - 15)))}
-            className="text-gray-400 hover:text-white"
+            className="text-white/60 hover:text-white"
+            title="Zoom Out"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
-          <span className="text-gray-400 font-mono text-[10px] w-8 text-center">{zoomLevel}%</span>
+          <span className="text-white font-mono text-[11px] w-9 text-center font-medium">
+            {zoomLevel}%
+          </span>
           <button
             onClick={() => dispatch(setZoomLevel(Math.min(200, zoomLevel + 15)))}
-            className="text-gray-400 hover:text-white"
+            className="text-white/60 hover:text-white"
+            title="Zoom In"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Right: Modules & Collaborators */}
+      {/* Right: Actions, Panels & Collaborators */}
       <div className="flex items-center gap-2">
-        {/* AI Stem Isolation Launcher */}
-        <button
-          onClick={onOpenAIStems}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/40 text-pink-300 text-xs font-semibold hover:border-pink-400 transition"
-        >
-          <Cpu className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
-          <span>Demucs AI</span>
-        </button>
-
-        {/* Mixer Toggle */}
+        {/* Mixing Console Toggle */}
         <button
           onClick={onToggleMixer}
-          className="p-1.5 rounded-lg bg-studio-panel border border-studio-border text-gray-300 hover:text-white hover:border-indigo-500 transition"
-          title="Toggle Mixing Console"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/10 hover:bg-white/15 text-[#e6ded5] hover:text-white text-xs font-medium transition"
+          title="Open Mixing Console"
         >
-          <Sliders className="w-4 h-4" />
+          <Sliders className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Mixer</span>
         </button>
 
-        {/* Version History */}
+        {/* Sequencer / Piano Roll Toggle */}
+        <button
+          onClick={onTogglePianoRoll}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/10 hover:bg-white/15 text-[#e6ded5] hover:text-white text-xs font-medium transition"
+          title="MIDI Step Sequencer"
+        >
+          <Music className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Sequencer</span>
+        </button>
+
+        {/* Version History Toggle */}
         <button
           onClick={onToggleVersions}
-          className="p-1.5 rounded-lg bg-studio-panel border border-studio-border text-gray-300 hover:text-white hover:border-indigo-500 transition"
-          title="Version Control Log"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/10 hover:bg-white/15 text-[#e6ded5] hover:text-white text-xs font-medium transition"
+          title="Project Revisions"
         >
-          <History className="w-4 h-4" />
+          <History className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Versions</span>
         </button>
 
-        {/* Chat Drawer Toggle */}
+        {/* Timestamp Notes & Chat Toggle */}
         <button
           onClick={onToggleChat}
-          className="p-1.5 rounded-lg bg-studio-panel border border-studio-border text-gray-300 hover:text-white hover:border-indigo-500 transition relative"
-          title="Project Chat & Timeline Comments"
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/10 hover:bg-white/15 text-[#e6ded5] hover:text-white text-xs font-medium transition relative"
+          title="Collaborator Notes & Chat"
         >
-          <MessageSquare className="w-4 h-4" />
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-indigo-500" />
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Notes</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-studio-tan"></span>
         </button>
 
-        {/* Collaborators Stack */}
-        <div className="flex items-center -space-x-2 pl-2 border-l border-studio-border">
+        {/* Invite Team Member */}
+        <button
+          onClick={onOpenInvite}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/10 hover:bg-white/15 text-[#e6ded5] hover:text-white text-xs font-medium transition"
+          title="Invite Collaborator"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+          <span className="hidden md:inline">Invite</span>
+        </button>
+
+        {/* Royalty Splits & Agreements */}
+        <button
+          onClick={onOpenRoyalty}
+          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-white/10 bg-white/10 hover:bg-white/15 text-[#e6ded5] hover:text-white text-xs font-medium transition"
+          title="Royalty Splits & Contracts"
+        >
+          <FileText className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Splits</span>
+        </button>
+
+        {/* Export Audio */}
+        <button
+          onClick={onOpenExport}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-studio-tan hover:bg-studio-tanHover text-studio-header text-xs font-semibold shadow-xs transition"
+          title="Bounce / Export Audio"
+        >
+          <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>Export</span>
+        </button>
+
+        {/* Online Collaborators Stack */}
+        <div className="flex items-center -space-x-1.5 pl-2 border-l border-white/15">
           {onlineCollaborators.map((c) => (
             <img
               key={c.id}
               src={c.avatar}
               alt={c.name}
-              title={`${c.name} (${c.role})`}
-              className="w-7 h-7 rounded-full border-2 border-studio-dark object-cover"
+              title={`${c.name} (${c.role}) - Online`}
+              className="w-7 h-7 rounded-full border-2 border-studio-header object-cover"
             />
           ))}
         </div>

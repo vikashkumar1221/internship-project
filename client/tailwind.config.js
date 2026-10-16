@@ -4,36 +4,39 @@ export default {
     './index.html',
     './src/**/*.{js,ts,jsx,tsx}',
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         studio: {
-          darker: '#090a0f',
-          dark: '#0f111a',
-          card: '#161926',
-          panel: '#1e2235',
-          border: '#2a2f45',
-          accent: '#6366f1', // Indigo
-          neonPink: '#ec4899',
-          neonCyan: '#06b6d4',
-          neonGreen: '#10b981',
-          gold: '#f59e0b'
+          header: '#2e2623', // Dark espresso brown from image header
+          headerHover: '#3b312d',
+          tan: '#dcc5b2', // Warm tan / sand accent button & logo
+          tanHover: '#cfb59f',
+          bg: '#faf8f5', // Warm clean eggshell / off-white
+          section: '#f3eee8', // Warm sand lower section
+          surface: '#ffffff',
+          card: '#ffffff',
+          panel: '#f5f0ea',
+          border: '#e6ded5',
+          borderDark: '#d4c9bd',
+          text: '#231f1d', // Deep warm charcoal text
+          muted: '#736a64', // Warm muted gray
+          darkBtn: '#2b2421', // Dark button from hero
+          darkBtnHover: '#3a312d',
+          success: '#10b981',
+          warning: '#d97706',
+          danger: '#dc2626',
         }
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        mono: ['Fira Code', 'monospace']
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Newsreader', 'Georgia', 'serif'],
+        mono: ['JetBrains Mono', 'monospace']
       },
-      animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'glow-cyan': 'glowCyan 2s infinite alternate',
-      },
-      keyframes: {
-        glowCyan: {
-          '0%': { boxShadow: '0 0 5px rgba(6, 182, 212, 0.3)' },
-          '100%': { boxShadow: '0 0 20px rgba(6, 182, 212, 0.8)' }
-        }
+      boxShadow: {
+        subtle: '0 1px 3px 0 rgba(43, 36, 33, 0.04), 0 1px 2px 0 rgba(43, 36, 33, 0.02)',
+        card: '0 4px 6px -1px rgba(43, 36, 33, 0.05), 0 2px 4px -1px rgba(43, 36, 33, 0.03)',
+        elevated: '0 10px 20px -3px rgba(43, 36, 33, 0.08), 0 4px 6px -2px rgba(43, 36, 33, 0.04)'
       }
     },
   },
