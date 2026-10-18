@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/common/Navbar';
 import Sidebar from '../components/common/Sidebar';
 import ProjectCard from '../components/dashboard/ProjectCard';
-import { Plus, FolderKanban, Search, X, Loader2, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Plus, FolderKanban, Search, X, Loader2, Music, Users, HardDrive, Sliders } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
@@ -33,7 +35,6 @@ export default function DashboardPage() {
       const recents = res.data?.data?.recent || [];
       const shared = res.data?.data?.shared || [];
 
-      // Combine owned and shared with category tag
       const mappedOwned = recents.map(p => ({ ...p, category: p.status === 'Archived' ? 'Archived' : 'Owned' }));
       const mappedShared = shared
         .filter(s => !recents.some(r => r._id === s._id))
@@ -43,7 +44,6 @@ export default function DashboardPage() {
       if (all.length > 0) {
         setProjects(all);
       } else {
-        // Fallback default demo projects if empty database
         setProjects([
           {
             _id: 'proj_demo_1',
@@ -68,7 +68,7 @@ export default function DashboardPage() {
         ]);
       }
     } catch (err) {
-      console.warn('Failed to load projects from server, displaying local:', err.message);
+      console.warn('Failed to load projects from server:', err.message);
     } finally {
       setLoading(false);
     }
@@ -136,182 +136,240 @@ export default function DashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between selection:bg-[#dcc5b2] selection:text-[#2c2420]">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between selection:bg-amber-100 selection:text-amber-900">
       <Navbar onOpenNewProject={() => setShowCreateModal(true)} />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar onOpenNewProject={() => setShowCreateModal(true)} />
 
         <main className="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
-        {/* Top Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-extrabold text-[#231f1d] tracking-tight">Your Projects</h1>
-            <p className="text-xs text-[#736a64] mt-0.5">
-              Manage your multi-track DAW sessions, audio stems, and team agreements.
-            </p>
-          </div>
+          {/* Welcome Banner */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                Welcome, {user?.name || 'Creator'}!
+              </h1>
+              <p className="text-xs text-slate-500 mt-1">
+                Collaborate in real time on multi-track DAW projects without exchanging audio files.
+              </p>
+            </div>
 
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#2c2420] hover:bg-[#3d332e] font-semibold text-xs text-white shadow-xs transition"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>New Project</span>
-          </button>
-        </div>
-
-        {/* Search & Tabs Row */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-1">
-          {/* Tabs: All, Owned, Collaborating, Archived */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-            {['All', 'Owned', 'Collaborating', 'Archived'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
-                  activeTab === tab
-                    ? 'bg-[#2c2420] text-white shadow-xs'
-                    : 'bg-white border border-[#e6ded5] text-[#736a64] hover:text-[#231f1d] hover:bg-[#faf8f5]'
-                }`}
+            <div className="flex items-center gap-3">
+              <Link
+                to="/studio"
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs transition"
               >
-                {tab}
+                <Sliders className="w-3.5 h-3.5" />
+                <span>Open Studio</span>
+              </Link>
+
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-xs transition"
+              >
+                <Plus className="w-4 h-4 stroke-[2.5]" />
+                <span>New Project</span>
               </button>
-            ))}
+            </div>
           </div>
 
-          {/* Search Box */}
-          <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 text-[#8c827a] absolute left-3 top-2.5" />
-            <input
-              type="text"
-              placeholder="Search projects..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-[#e6ded5] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#231f1d] placeholder-[#a89f97] focus:outline-none focus:border-[#2c2420] shadow-xs transition"
-            />
-          </div>
-        </div>
+          {/* KPI Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-xs font-semibold text-slate-500">Active Projects</span>
+                <Music className="w-4 h-4 text-amber-600" />
+              </div>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">{projects.length}</p>
+            </div>
 
-        {/* Loading Spinner */}
-        {loading && (
-          <div className="p-12 text-center text-xs text-[#736a64] flex items-center justify-center gap-2">
-            <Loader2 className="w-5 h-5 animate-spin text-[#2c2420]" />
-            <span>Loading sessions from database...</span>
-          </div>
-        )}
+            <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-xs font-semibold text-slate-500">Audio Stems</span>
+                <HardDrive className="w-4 h-4 text-indigo-600" />
+              </div>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">{projects.length * 5}</p>
+            </div>
 
-        {/* Project Cards Grid */}
-        {!loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredProjects.map((p) => (
-              <ProjectCard key={p._id} project={p} onDelete={handleDeleteProject} />
-            ))}
-          </div>
-        )}
+            <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-xs font-semibold text-slate-500">Collaborators</span>
+                <Users className="w-4 h-4 text-emerald-600" />
+              </div>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">
+                {projects.filter(p => p.category === 'Collaborating').length + 3}
+              </p>
+            </div>
 
-        {!loading && filteredProjects.length === 0 && (
-          <div className="bg-white border border-dashed border-[#e6ded5] rounded-2xl p-12 text-center space-y-3">
-            <FolderKanban className="w-8 h-8 text-[#8c827a] mx-auto" />
-            <h3 className="text-sm font-bold text-[#231f1d]">No projects found in this category</h3>
-            <p className="text-xs text-[#736a64]">Try selecting 'All' or create a new project above.</p>
+            <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="text-xs font-semibold text-slate-500">Cloud Storage</span>
+                <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono">Free</span>
+              </div>
+              <p className="text-2xl font-extrabold text-slate-900 mt-1">14.2 MB</p>
+            </div>
           </div>
-        )}
-      </main>
+
+          {/* Search & Tabs Row */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              {['All', 'Owned', 'Collaborating', 'Archived'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    activeTab === tab
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full sm:w-72">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search projects by title or genre..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-slate-900 shadow-xs transition"
+              />
+            </div>
+          </div>
+
+          {/* Loading Spinner */}
+          {loading && (
+            <div className="p-12 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-slate-900" />
+              <span>Loading projects...</span>
+            </div>
+          )}
+
+          {/* Project Cards Grid */}
+          {!loading && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredProjects.map((p) => (
+                <ProjectCard key={p._id} project={p} onDelete={handleDeleteProject} />
+              ))}
+            </div>
+          )}
+
+          {!loading && filteredProjects.length === 0 && (
+            <div className="bg-white border border-dashed border-slate-200 rounded-2xl p-12 text-center space-y-3">
+              <FolderKanban className="w-8 h-8 text-slate-400 mx-auto" />
+              <h3 className="text-sm font-bold text-slate-900">No projects found in this tab</h3>
+              <p className="text-xs text-slate-500">Try selecting 'All' or click 'New Project' to create one.</p>
+            </div>
+          )}
+        </main>
       </div>
 
-      {/* New Project Modal */}
+      {/* Create Project Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-[#2c2420]/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-[#e6ded5] rounded-2xl max-w-md w-full p-6 shadow-2xl relative animate-in zoom-in-95">
-            <button
-              onClick={() => setShowCreateModal(false)}
-              className="absolute top-4 right-4 text-[#8c827a] hover:text-[#231f1d] p-1 rounded-lg hover:bg-[#faf8f5]"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <h3 className="font-extrabold text-base text-[#231f1d] mb-1">Create New Project</h3>
-            <p className="text-xs text-[#736a64] mb-4">Initialize a new multi-track DAW session in MongoDB.</p>
-
-            <form onSubmit={handleCreateProject} className="space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative space-y-5">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
               <div>
-                <label className="text-xs font-semibold text-[#231f1d] block mb-1">Project Name</label>
+                <h2 className="text-base font-extrabold text-slate-900">Create New Project</h2>
+                <p className="text-xs text-slate-500">Start a new multi-track session</p>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateProject} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-800 mb-1">Project Title</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Midnight Jam"
+                  placeholder="e.g. Summer Sunset Acoustic"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full bg-[#faf8f5] border border-[#e6ded5] rounded-xl px-3 py-2 text-xs text-[#231f1d] placeholder-[#a89f97] focus:outline-none focus:border-[#2c2420]"
+                  className="w-full px-3.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:outline-hidden focus:bg-white focus:border-slate-900 transition font-medium"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-[#231f1d] block mb-1">Genre</label>
+                  <label className="block font-bold text-slate-800 mb-1">Genre</label>
                   <select
                     value={newGenre}
                     onChange={(e) => setNewGenre(e.target.value)}
-                    className="w-full bg-[#faf8f5] border border-[#e6ded5] rounded-xl px-2.5 py-2 text-xs text-[#231f1d] font-medium focus:outline-none focus:border-[#2c2420]"
+                    className="w-full px-3.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:outline-hidden focus:bg-white focus:border-slate-900 transition font-medium"
                   >
                     <option value="Electronic / Synth">Electronic / Synth</option>
                     <option value="Pop / Vocal">Pop / Vocal</option>
                     <option value="Acoustic / Indie">Acoustic / Indie</option>
                     <option value="Hip Hop / Trap">Hip Hop / Trap</option>
+                    <option value="Lo-Fi Chill">Lo-Fi Chill</option>
                     <option value="R&B / Soul">R&B / Soul</option>
                     <option value="Rock / Alternative">Rock / Alternative</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-[#231f1d] block mb-1">Tempo (BPM)</label>
+                  <label className="block font-bold text-slate-800 mb-1">Tempo (BPM)</label>
                   <input
                     type="number"
                     min="40"
-                    max="260"
+                    max="240"
                     value={newTempo}
                     onChange={(e) => setNewTempo(e.target.value)}
-                    className="w-full bg-[#faf8f5] border border-[#e6ded5] rounded-xl px-3 py-2 text-xs font-mono font-bold text-[#231f1d] focus:outline-none focus:border-[#2c2420]"
+                    className="w-full px-3.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:outline-hidden focus:bg-white focus:border-slate-900 transition font-medium font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-[#231f1d] block mb-1">Musical Key</label>
-                <input
-                  type="text"
-                  placeholder="e.g. F Minor, C Major"
+                <label className="block font-bold text-slate-800 mb-1">Musical Key</label>
+                <select
                   value={newKey}
                   onChange={(e) => setNewKey(e.target.value)}
-                  className="w-full bg-[#faf8f5] border border-[#e6ded5] rounded-xl px-3 py-2 text-xs text-[#231f1d] placeholder-[#a89f97] focus:outline-none focus:border-[#2c2420]"
-                />
+                  className="w-full px-3.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:outline-hidden focus:bg-white focus:border-slate-900 transition font-medium font-mono"
+                >
+                  <option value="C Major">C Major</option>
+                  <option value="C Minor">C Minor</option>
+                  <option value="D Minor">D Minor</option>
+                  <option value="E Minor">E Minor</option>
+                  <option value="F Minor">F Minor</option>
+                  <option value="G Major">G Major</option>
+                  <option value="A Minor">A Minor</option>
+                  <option value="B♭ Major">B♭ Major</option>
+                </select>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-[#231f1d] block mb-1">Session Description</label>
+                <label className="block font-bold text-slate-800 mb-1">Description & Notes</label>
                 <textarea
                   rows="2"
-                  placeholder="Notes for collaborators, vocal guide details..."
+                  placeholder="Notes for vocalists, bpm, key, or reference song..."
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
-                  className="w-full bg-[#faf8f5] border border-[#e6ded5] rounded-xl px-3 py-2 text-xs text-[#231f1d] placeholder-[#a89f97] focus:outline-none focus:border-[#2c2420]"
+                  className="w-full px-3.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:outline-hidden focus:bg-white focus:border-slate-900 transition font-medium"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="pt-2 flex justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[#736a64] hover:bg-[#faf8f5]"
+                  className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:text-slate-900 font-semibold transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={creating || !newTitle.trim()}
-                  className="px-5 py-2.5 rounded-xl bg-[#2c2420] hover:bg-[#3d332e] text-xs font-bold text-white shadow-xs transition flex items-center gap-1.5 disabled:opacity-50"
+                  disabled={creating}
+                  className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold transition flex items-center gap-1.5 shadow-xs"
                 >
-                  {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                  {creating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>{creating ? 'Creating...' : 'Create & Open Studio'}</span>
                 </button>
               </div>

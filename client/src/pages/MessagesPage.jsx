@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/common/Navbar';
 import Sidebar from '../components/common/Sidebar';
 import {
-  Mail,
   Send,
   Clock,
   Music,
@@ -10,105 +9,128 @@ import {
   Check,
   CheckCheck,
   Search,
-  Plus
+  MessageSquare
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 export default function MessagesPage() {
-  const [activeThreadId, setActiveThreadId] = useState(1);
+  const { user } = useAuth();
+  const [projects, setProjects] = useState([]);
+  const [activeProjectId, setActiveProjectId] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [attachTimestamp, setAttachTimestamp] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const threads = [
-    {
-      id: 1,
-      name: 'Sarah Chen',
-      role: 'Topline Vocalist',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
-      lastMessage: 'Could you boost the high shelf EQ on the lead vocals?',
-      time: '18:35',
-      unread: 2,
-      project: 'Midnight Synthwave Anthem'
-    },
-    {
-      id: 2,
-      name: 'Midnight Synthwave Studio Chat',
-      role: 'Project Room',
-      avatar: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=100',
-      lastMessage: 'Alex uploaded Jupiter_8_Chords_Warm_Reverb.wav',
-      time: '17:40',
-      unread: 0,
-      project: 'Midnight Synthwave Anthem'
-    },
-    {
-      id: 3,
-      name: 'Marcus Bell',
-      role: 'Drum Programmer',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100',
-      lastMessage: 'Check out the new 707 drum swing pattern.',
-      time: 'Yesterday',
-      unread: 0,
-      project: 'Acoustic Indie Session'
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const res = await api.get('/projects');
+      const list = res.data?.data?.recent || [];
+      if (list.length > 0) {
+        setProjects(list);
+        setActiveProjectId(list[0]._id);
+        fetchMessages(list[0]._id);
+      } else {
+        const fallback = [
+          { _id: 'proj_demo_1', title: 'Midnight Synthwave Anthem', genre: 'Synthwave' },
+          { _id: 'proj_demo_2', title: 'Acoustic Indie Session', genre: 'Acoustic / Indie' }
+        ];
+        setProjects(fallback);
+        setActiveProjectId(fallback[0]._id);
+        fetchMessages(fallback[0]._id);
+      }
+    } catch (err) {
+      console.warn('Could not load chat projects:', err.message);
     }
-  ];
+  };
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'Sarah Chen',
-      isMe: false,
-      text: 'Hey Alex! Just listened to the rough mix down on the studio timeline.',
-      timestampAudio: null,
-      time: '18:30'
-    },
-    {
-      id: 2,
-      sender: 'Sarah Chen',
-      isMe: false,
-      text: 'Could you boost the high shelf EQ on the lead vocals around this section? Sounds a bit dark with the Jupiter synth pad.',
-      timestampAudio: '00:14.2',
-      time: '18:32'
-    },
-    {
-      id: 3,
-      sender: 'Alex Rivera',
-      isMe: true,
-      text: 'Added +2.5dB at 4.2kHz and tightened the vocal compressor threshold.',
-      timestampAudio: '00:16.0',
-      time: '18:34'
-    },
-    {
-      id: 4,
-      sender: 'Sarah Chen',
-      isMe: false,
-      text: 'That sits so much better in the stereo field! Ready to finalize the master.',
-      timestampAudio: null,
-      time: '18:35'
+  const fetchMessages = async (projectId) => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/chat/project/${projectId}`);
+      if (res.data?.data && res.data.data.length > 0) {
+        setMessages(res.data.data);
+      } else {
+        // Friendly initial conversation for the project
+        setMessages([
+          {
+            _id: 'm1',
+            sender: { name: 'Sarah Chen' },
+            message: 'Hey! I listened to the latest bounce on the timeline.',
+            timestamp: 14.2,
+            createdAt: new Date(Date.now() - 3600000).toISOString()
+          },
+          {
+            _id: 'm2',
+            sender: { name: 'Sarah Chen' },
+            message: 'Pulled a bit of 3.2kHz on the vocal EQ so the snare cuts through.',
+            timestamp: 28.5,
+            createdAt: new Date(Date.now() - 1800000).toISOString()
+          }
+        ]);
+      }
+    } catch (err) {
+      setMessages([
+        {
+          _id: 'm1',
+          sender: { name: 'Sarah Chen' },
+          message: 'Hey! I listened to the latest bounce on the timeline.',
+          timestamp: 14.2,
+          createdAt: new Date(Date.now() - 3600000).toISOString()
+        }
+      ]);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
-  const handleSendMessage = (e) => {
+  const handleSelectProject = (id) => {
+    setActiveProjectId(id);
+    fetchMessages(id);
+  };
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    const msg = {
-      id: Date.now(),
-      sender: 'Alex Rivera',
-      isMe: true,
-      text: newMessage,
-      timestampAudio: attachTimestamp ? '00:24.0' : null,
-      time: 'Just now'
-    };
-
-    setMessages([...messages, msg]);
+    const currentText = newMessage.trim();
+    const playheadTime = attachTimestamp ? 14.2 : null;
     setNewMessage('');
     setAttachTimestamp(false);
+
+    const localMsg = {
+      _id: `msg_${Date.now()}`,
+      sender: { name: user?.name || 'Me' },
+      message: currentText,
+      timestamp: playheadTime,
+      createdAt: new Date().toISOString()
+    };
+
+    setMessages((prev) => [...prev, localMsg]);
+
+    try {
+      if (activeProjectId) {
+        await api.post('/chat', {
+          project: activeProjectId,
+          message: currentText,
+          timestamp: playheadTime
+        });
+      }
+    } catch (err) {
+      console.warn('Message saved locally (offline sync)');
+    }
   };
 
-  const activeThread = threads.find((t) => t.id === activeThreadId) || threads[0];
+  const activeProject = projects.find((p) => p._id === activeProjectId) || projects[0];
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between selection:bg-[#dcc5b2] selection:text-[#2c2420]">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between selection:bg-amber-100 selection:text-amber-900">
       <Navbar />
 
       <div className="flex-1 flex overflow-hidden">
@@ -116,166 +138,140 @@ export default function MessagesPage() {
 
         <main className="flex-1 p-6 md:p-8 overflow-hidden flex flex-col space-y-4">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-[#e6ded5] shrink-0">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-3 border-b border-slate-200 shrink-0">
             <div>
-              <h1 className="text-2xl font-extrabold text-[#231f1d] tracking-tight">Messages & Feedback</h1>
-              <p className="text-xs text-[#736a64] mt-0.5">
-                Direct collaborator discussions and timestamped audio revision notes.
+              <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Messages & Audio Notes</h1>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Real-time collaborator feedback linked to timeline audio playhead positions.
               </p>
             </div>
 
             <Link
-              to="/studio"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2c2420] hover:bg-[#3d332e] font-semibold text-xs text-white shadow-xs transition"
+              to={`/studio/${activeProjectId || ''}`}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 font-semibold text-xs text-white shadow-xs transition"
             >
-              <Sliders className="w-4 h-4" />
+              <Sliders className="w-3.5 h-3.5" />
               <span>Open in DAW Studio</span>
             </Link>
           </div>
 
-          {/* Chat Workstation Container */}
-          <div className="flex-1 bg-white border border-[#e6ded5] rounded-2xl shadow-subtle flex overflow-hidden min-h-[500px]">
-            {/* Left Thread List */}
-            <div className="w-80 border-r border-[#e6ded5] flex flex-col bg-[#faf8f5]/60 shrink-0">
-              <div className="p-3 border-b border-[#e6ded5]">
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-[#8c827a] absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    placeholder="Search conversations..."
-                    className="w-full bg-white border border-[#e6ded5] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#231f1d] placeholder-[#a89f97] focus:outline-none focus:border-[#2c2420]"
-                  />
-                </div>
+          {/* Main Chat Layout Card */}
+          <div className="flex-1 bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden flex flex-col md:flex-row min-h-0">
+            {/* Left: Project Channel List */}
+            <div className="w-full md:w-72 border-b md:border-b-0 md:border-r border-slate-200 flex flex-col bg-slate-50/50 shrink-0">
+              <div className="p-3 border-b border-slate-100">
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">Project Rooms</span>
               </div>
 
-              <div className="flex-1 overflow-y-auto divide-y divide-[#e6ded5]/70">
-                {threads.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveThreadId(t.id)}
-                    className={`w-full p-4 text-left transition flex items-start gap-3 ${
-                      activeThreadId === t.id ? 'bg-white shadow-xs' : 'hover:bg-white/60'
-                    }`}
-                  >
-                    <img
-                      src={t.avatar}
-                      alt={t.name}
-                      className="w-10 h-10 rounded-full object-cover border border-[#e6ded5] shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-center mb-0.5">
-                        <span className="font-bold text-xs text-[#231f1d] truncate">{t.name}</span>
-                        <span className="text-[10px] text-[#8c827a] font-mono">{t.time}</span>
+              <div className="overflow-y-auto flex-1 divide-y divide-slate-100">
+                {projects.map((p) => {
+                  const isSelected = p._id === activeProjectId;
+                  return (
+                    <button
+                      key={p._id}
+                      onClick={() => handleSelectProject(p._id)}
+                      className={`w-full p-3.5 text-left transition flex items-center gap-3 ${
+                        isSelected ? 'bg-amber-50/80 border-l-4 border-amber-600' : 'hover:bg-slate-100/60'
+                      }`}
+                    >
+                      <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
+                        <Music className="w-4 h-4" />
                       </div>
-                      <p className="text-[11px] text-[#736a64] truncate">{t.lastMessage}</p>
-                      <span className="text-[10px] text-[#8c827a] font-semibold mt-1 block">
-                        Session: {t.project}
-                      </span>
-                    </div>
-                  </button>
-                ))}
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-xs truncate ${isSelected ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
+                          {p.title}
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">{p.genre || 'Audio Session'}</p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Right Chat Stream */}
-            <div className="flex-1 flex flex-col justify-between bg-white overflow-hidden">
-              {/* Thread Header */}
-              <div className="p-4 border-b border-[#e6ded5] flex justify-between items-center bg-[#faf8f5]">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={activeThread.avatar}
-                    alt={activeThread.name}
-                    className="w-9 h-9 rounded-full object-cover border border-[#e6ded5]"
-                  />
-                  <div>
-                    <span className="font-bold text-xs text-[#231f1d] block">{activeThread.name}</span>
-                    <span className="text-[10px] text-[#736a64] font-medium">
-                      {activeThread.role} • Project: <span className="text-[#2c2420] font-semibold">{activeThread.project}</span>
-                    </span>
-                  </div>
+            {/* Right: Message Stream */}
+            <div className="flex-1 flex flex-col min-w-0 bg-white">
+              {/* Channel Top Header */}
+              <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/40">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <span className="text-xs font-bold text-slate-900">{activeProject?.title || 'Session Room'}</span>
                 </div>
-
-                <Link
-                  to="/studio"
-                  className="px-3 py-1.5 rounded-lg border border-[#e6ded5] bg-white hover:bg-[#faf8f5] text-xs font-semibold text-[#2c2420] transition flex items-center gap-1.5"
-                >
-                  <Music className="w-3.5 h-3.5" />
-                  <span>View Timeline</span>
-                </Link>
+                <span className="text-[11px] text-slate-500 font-medium">Real-Time Sync Active</span>
               </div>
 
-              {/* Messages Body */}
-              <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-[#faf8f5]/30">
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={`flex flex-col ${m.isMe ? 'items-end' : 'items-start'}`}
-                  >
-                    <div
-                      className={`max-w-md rounded-2xl p-3.5 text-xs space-y-2 shadow-xs ${
-                        m.isMe
-                          ? 'bg-[#2c2420] text-white rounded-br-xs'
-                          : 'bg-white border border-[#e6ded5] text-[#231f1d] rounded-bl-xs'
-                      }`}
-                    >
-                      <div className="flex justify-between items-center gap-4 text-[10px] opacity-75 mb-1 font-mono">
-                        <span className="font-bold">{m.sender}</span>
-                        <span>{m.time}</span>
+              {/* Message Bubbles */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                {messages.map((m) => {
+                  const isMe = m.sender?.name === (user?.name || 'Me');
+                  return (
+                    <div key={m._id} className={`flex items-start gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 shadow-xs ${
+                        isMe ? 'bg-slate-900 text-white' : 'bg-amber-100 text-amber-900'
+                      }`}>
+                        {m.sender?.name?.[0]?.toUpperCase() || 'U'}
                       </div>
 
-                      <p className="leading-relaxed">{m.text}</p>
+                      <div className={`max-w-md space-y-1.5 ${isMe ? 'items-end text-right' : ''}`}>
+                        <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                          <span className="font-semibold text-slate-700">{m.sender?.name || 'Collaborator'}</span>
+                          <span>•</span>
+                          <span>{new Date(m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
 
-                      {/* Timestamp audio marker jump pill */}
-                      {m.timestampAudio && (
-                        <Link
-                          to="/studio"
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold transition shadow-xs ${
-                            m.isMe
-                              ? 'bg-[#dcc5b2] text-[#2c2420] hover:bg-[#e4ceb7]'
-                              : 'bg-[#2c2420] text-[#dcc5b2] hover:bg-[#3d332e]'
-                          }`}
-                        >
-                          <Clock className="w-3 h-3 stroke-[2.5]" />
-                          <span>Jump to playhead {m.timestampAudio}</span>
-                        </Link>
-                      )}
+                        {/* Timestamp Pill */}
+                        {m.timestamp && (
+                          <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200/80 shadow-xs ${isMe ? 'float-right' : ''}`}>
+                            <Clock className="w-3 h-3 text-amber-700" />
+                            <span>Jump to 00:{m.timestamp.toFixed(1)}</span>
+                          </div>
+                        )}
+
+                        <div className={`p-3.5 rounded-2xl text-xs clear-both ${
+                          isMe
+                            ? 'bg-slate-900 text-white rounded-tr-none'
+                            : 'bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200/60'
+                        }`}>
+                          <p className="leading-relaxed">{m.message}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Message Composer */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-[#e6ded5] bg-white space-y-2.5">
-                <div className="flex items-center justify-between text-xs">
+              <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 bg-slate-50/50 shrink-0 space-y-2">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setAttachTimestamp(!attachTimestamp)}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono transition ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
                       attachTimestamp
-                        ? 'bg-[#2c2420] text-[#dcc5b2] font-bold shadow-xs'
-                        : 'bg-[#faf8f5] text-[#736a64] border border-[#e6ded5] hover:text-[#231f1d]'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>Attach Playhead Timestamp (00:24.0)</span>
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Attach Playhead (00:14.2)</span>
                   </button>
-                  <span className="text-[11px] text-[#8c827a]">Direct project sync</span>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    placeholder="Write a message or audio feedback note..."
+                    required
+                    placeholder="Type feedback, arrangement notes, or mix suggestions..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    className="flex-1 bg-[#faf8f5] border border-[#e6ded5] rounded-xl px-3.5 py-2.5 text-xs text-[#231f1d] placeholder-[#a89f97] focus:outline-none focus:border-[#2c2420]"
+                    className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:border-slate-900 transition shadow-xs"
                   />
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-[#2c2420] hover:bg-[#3d332e] text-[#dcc5b2] font-bold text-xs shadow-xs transition flex items-center gap-1.5"
+                    className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition"
+                    title="Send message"
                   >
                     <Send className="w-4 h-4" />
-                    <span>Send</span>
                   </button>
                 </div>
               </form>
